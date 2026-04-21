@@ -1,0 +1,36 @@
+name: Deploy Discord Presence Worker
+
+# Deploys the discord-presence/ Node.js worker to Fly.io whenever:
+#   - changes are pushed to main that touch discord-presence/
+#   - the workflow is triggered manually from the Actions tab
+#
+# Fly.io is the host for the persistent gateway connection that maintains the
+# bot's online status. Beget shared hosting (which runs the rest of the site)
+# can't run long-running processes, so the worker lives on Fly.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'discord-presence/**'
+      - '.github/workflows/deploy-presence.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Fly.io
+    runs-on: ubuntu-latest
+    concurrency: deploy-presence  # don't double-deploy if pushes land back-to-back
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy worker
+        working-directory: discord-presence
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
