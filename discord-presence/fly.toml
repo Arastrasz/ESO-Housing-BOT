@@ -1,0 +1,25 @@
+# Fly.io config for the ESO Housing Discord presence worker.
+# Run `fly launch` once to create the app; this file is then re-used by `fly deploy`.
+
+app = "esohousing-presence"
+primary_region = "fra"   # Frankfurt — close to Discord's EU gateway
+
+[build]
+  # Uses the Dockerfile in this directory
+
+[env]
+  PRESENCE_ROTATE_MS = "360000"
+  PRESENCE_LANG = "en"
+
+# Single always-on machine. The presence worker has no HTTP endpoint —
+# don't enable services or auto-stop. Fly's free tier covers this easily.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+
+[processes]
+  app = "node presence.js"
+
+# No HTTP services exposed — this is a worker, not a web app
+[deploy]
+  strategy = "immediate"
